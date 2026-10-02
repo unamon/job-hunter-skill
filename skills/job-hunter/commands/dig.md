@@ -24,7 +24,7 @@ Write a markdown report with these sections, in this order. Keep it tight — to
 One-line description of the role: title, company, location, comp (if known), stage.
 
 ### Why it might fit
-2–4 bullets pulled from the JD that map onto the user's profile (senior Android / KMP / Brazil). Quote short JD phrases (≤15 words) in quotes; do not paraphrase entire paragraphs.
+2–4 bullets pulled from the JD that map onto the user's profile (roles, skills, experience and location in profile.yaml). Quote short JD phrases (≤15 words) in quotes; do not paraphrase entire paragraphs.
 
 ### Friction
 Surface anything that creates work or risk: timezone, country lock, on-site, US clearance, junior title hidden in seniority phrasing, generic ATS form likely to need profile boilerplate, no salary disclosed, etc.

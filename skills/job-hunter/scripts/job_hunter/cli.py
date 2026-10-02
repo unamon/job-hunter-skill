@@ -41,8 +41,8 @@ from .sources import REGISTRY, SourceError, get_source
 app = typer.Typer(
     name="job-hunter",
     help=(
-        "Discover, track, and assist with senior mobile / Android / "
-        "Kotlin Multiplatform job applications."
+        "Discover, track, and assist with tech job applications "
+        "matching your profile.yaml."
     ),
 )
 console = Console()

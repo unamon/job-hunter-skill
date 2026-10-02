@@ -84,7 +84,7 @@ class IndeedSource:
     async def discover(
         self, query: SearchQuery, client: httpx.AsyncClient
     ) -> AsyncIterator[JobPosting]:
-        roles = query.roles or ["Android Engineer"]
+        roles = query.roles or ["Software Engineer"]
         for role in roles:
             for location in query.locations or ["Brasil"]:
                 url = f"{self.base_url}/jobs?q={_qs(role)}" f"&l={_qs(location)}&fromage=7"

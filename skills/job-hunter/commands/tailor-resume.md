@@ -24,9 +24,9 @@ Top-level keys you should populate, in priority order:
 
 - `basics`: `name`, `headline`, `url`, `summary`. **Leave `email`, `phone`, `location`, `birthdate`, `picture` empty** — the user pastes these manually post-import.
 - `sections.profiles`: GitHub, LinkedIn, personal site if in profile.yaml.
-- `sections.summary`: 3–4 sentences. Lead with the senior mobile / Android / KMP framing if the JD asks for that. Quote at most one short JD phrase verbatim (≤15 words).
+- `sections.summary`: 3–4 sentences. Lead with the framing from the profile's `public_profile_blurb`, adjusted toward what the JD emphasizes. Quote at most one short JD phrase verbatim (≤15 words).
 - `sections.experience`: keep entries the profile already has; **reorder bullets per entry to surface the ones most aligned with the JD**. Do not invent achievements.
-- `sections.skills`: filter the user's known skill set down to the union of (their skills) ∩ (skills the JD names). If the user lists Kotlin and the JD names Kotlin/Coroutines/Compose, include all three under one "Languages & Frameworks" subgroup.
+- `sections.skills`: filter the user's known skill set down to the union of (their skills) ∩ (skills the JD names). If the user lists .NET and the JD names ASP.NET Core/Entity Framework/LINQ, include all three under one "Languages & Frameworks" subgroup.
 - `sections.projects` / `sections.publications` / `sections.awards`: include items aligned to the JD; drop the rest.
 - `metadata.template`: default to `azurill` (matches a clean dark theme on Reactive Resume). The user can switch in the UI.
 

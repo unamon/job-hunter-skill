@@ -26,6 +26,7 @@ htmlcov/
 .env.local
 *.env.local
 secrets/personal.env
+my-profile/
 
 runs/
 .local-runs/

@@ -36,8 +36,8 @@ class JobNaGringaSource:
     async def discover(
         self, query: SearchQuery, client: httpx.AsyncClient
     ) -> AsyncIterator[JobPosting]:
-        # Single listing page for the senior-mobile slice; expand as needed.
-        url = f"{self.base_url}/jobs?role=mobile&seniority=senior"
+        # General listing page; profile roles filter titles below.
+        url = f"{self.base_url}/jobs"
         html = await self._fetch(client, url)
         for posting in parse_listing(html, self.base_url):
             if not query.matches_role(posting.title):

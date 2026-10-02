@@ -1,8 +1,8 @@
 {
-  "name": "lomartins-skills",
+  "name": "unamon-skills",
   "owner": {
-    "name": "Luisa Martins",
-    "url": "https://github.com/lomartins"
+    "name": "unamon",
+    "url": "https://github.com/unamon"
   },
   "plugins": [
     {
@@ -10,7 +10,7 @@
       "source": "./skills/job-hunter",
       "description": "Discover, track, and assist with senior mobile / Android / Kotlin Multiplatform job applications. PII-safe form filling with shadow and auto modes. Self-improving adapters for Gupy, Greenhouse, Lever, Workday, Ashby and more.",
       "version": "0.13.1",
-      "homepage": "https://github.com/lomartins/job-hunter-skill",
+      "homepage": "https://github.com/unamon/job-hunter-skill",
       "license": "Apache-2.0",
       "keywords": ["jobs", "android", "kotlin-multiplatform", "scraping", "playwright", "brazil"],
       "category": "productivity"

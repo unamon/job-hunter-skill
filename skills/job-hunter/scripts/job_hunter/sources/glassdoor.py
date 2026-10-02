@@ -94,7 +94,7 @@ class GlassdoorSource:
     async def discover(
         self, query: SearchQuery, client: httpx.AsyncClient
     ) -> AsyncIterator[JobPosting]:
-        roles = query.roles or ["Android Engineer"]
+        roles = query.roles or ["Software Engineer"]
         for role in roles:
             for location in query.locations or ["Brazil"]:
                 url = (
