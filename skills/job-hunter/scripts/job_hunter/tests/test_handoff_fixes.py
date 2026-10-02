@@ -24,7 +24,7 @@ def test_bundled_adapters_resolve_from_package() -> None:
     d = list_bundled()
     assert d.exists(), f"bundled dir missing: {d}"
     sigs = {p.stem for p in d.glob("*.yaml")}
-    assert {"gupy", "greenhouse", "lever", "workday", "ashby"} <= sigs
+    assert {"gupy", "greenhouse", "lever", "workday", "ashby", "workable"} <= sigs
 
 
 # ─── #6 URL normalization ────────────────────────────────────────────────────

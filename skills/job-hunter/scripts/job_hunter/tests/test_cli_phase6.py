@@ -96,10 +96,10 @@ def test_stage_unknown_value_exits_nonzero(populated: paths_mod.Paths) -> None:
     assert "unknown stage" in r.stdout
 
 
-def test_adapter_list_shows_5_bundled(populated: paths_mod.Paths) -> None:
+def test_adapter_list_shows_6_bundled(populated: paths_mod.Paths) -> None:
     r = runner.invoke(app, ["adapter", "list"])
     assert r.exit_code == 0
-    for sig in ("gupy", "greenhouse", "lever", "workday", "ashby"):
+    for sig in ("gupy", "greenhouse", "lever", "workday", "ashby", "workable"):
         assert sig in r.stdout
     assert "bundled" in r.stdout
 

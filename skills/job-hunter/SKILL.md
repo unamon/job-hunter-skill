@@ -9,7 +9,7 @@ version: 0.13.1
 
 Discover, track, and assist with tech job applications (target roles come from the user's `profile.yaml`) across LinkedIn, Gupy, RemoteOK, Job na Gringa, and seven more sources. Tracks every opportunity from `discovered` through `offer`/`rejected` in a local SQLite DB mirrored to human-readable Markdown. Fills application forms in two modes — `shadow` (default; pauses before submit for your review) and `auto` (gated by adapter reliability score and explicit consent flags) — using a YAML adapter system that learns from unknown forms and improves over time.
 
-**When this skill is the right tool:** the user mentions a specific job board or posting URL; asks to track an application; wants to fill a form on a known ATS (Gupy, Greenhouse, Lever, Workday, Ashby); asks for a weekly application report; asks to add a new source or fix a broken adapter. **When it is not:** generic career coaching, resume writing from a blank page, mock interviews not tied to a tracked job.
+**When this skill is the right tool:** the user mentions a specific job board or posting URL; asks to track an application; wants to fill a form on a known ATS (Gupy, Greenhouse, Lever, Workday, Ashby, Workable); asks for a weekly application report; asks to add a new source or fix a broken adapter. **When it is not:** generic career coaching, resume writing from a blank page, mock interviews not tied to a tracked job.
 
 ## Forbidden actions (PII isolation)
 
@@ -158,7 +158,7 @@ Read these only when working on that specific area. They are NOT part of the alw
 | `references/sources/job_na_gringa.md` | Maintaining the Job na Gringa scraper |
 | `references/sources/remoteok.md` | RemoteOK JSON shape changes |
 | `references/sources/remotive.md`, `wwr.md`, `himalayas.md`, `programathor.md`, `coodesh.md`, `trampos.md`, `arcdev.md` | Implementing source 5–11 |
-| `references/adapters/gupy.md`, `greenhouse.md`, `lever.md`, `workday.md`, `ashby.md` | Editing an adapter or learning its quirks |
+| `references/adapters/gupy.md`, `greenhouse.md`, `lever.md`, `workday.md`, `ashby.md`, `workable.md` | Editing an adapter or learning its quirks |
 | `references/apply_modes.md` | Changing shadow/auto behavior; tuning auto gates |
 | `references/markdown_sync.md` | Touching `tracking_md.py`; determinism failures |
 | `references/self_improvement.md` | Working on `learn.py`; debugging platform signatures |

@@ -31,7 +31,14 @@ def home(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> paths_mod.Paths:
 def test_bundled_adapters_load() -> None:
     bundled_dir = list_bundled()
     yaml_files = sorted(bundled_dir.glob("*.yaml"))
-    assert {p.stem for p in yaml_files} == {"gupy", "greenhouse", "lever", "workday", "ashby"}
+    assert {p.stem for p in yaml_files} == {
+        "gupy",
+        "greenhouse",
+        "lever",
+        "workday",
+        "ashby",
+        "workable",
+    }
     for p in yaml_files:
         ad = load_adapter(p)
         assert ad.submit.auto_eligible is False
@@ -72,6 +79,11 @@ def test_match_url_picks_correct_adapter(home: paths_mod.Paths) -> None:
     matched = match_url("https://boards.greenhouse.io/some-company/jobs/123", adapters)
     assert matched is not None
     assert matched.platform_signature == "greenhouse"
+
+    # Workable
+    matched = match_url("https://apply.workable.com/acme/j/85FBE31A14/apply/", adapters)
+    assert matched is not None
+    assert matched.platform_signature == "workable"
 
     # No match
     assert match_url("https://example.com/jobs/1", adapters) is None

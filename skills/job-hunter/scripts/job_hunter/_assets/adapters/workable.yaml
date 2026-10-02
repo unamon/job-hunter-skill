@@ -1,0 +1,40 @@
+platform_signature: workable
+version: 1
+match:
+  url_pattern: "*apply.workable.com/*/j/*"
+  dom_markers:
+    - "form[data-ui='application-form']"
+
+fields:
+  - selector: "#firstname"
+    source: profile.first_name
+    required: true
+  - selector: "#lastname"
+    source: profile.last_name
+    required: true
+  - selector: "#email"
+    source: profile.links.email
+    required: true
+  - selector: "#headline"
+    source: profile.headline
+  - selector: "#input_phone"
+    source: secret.JOB_HUNTER_PHONE
+  - selector: "#city"
+    source: secret.JOB_HUNTER_CITY
+  - selector: "#country"
+    source: secret.JOB_HUNTER_COUNTRY
+  - selector: "input[type='file'][data-ui='resume']"
+    source: file.resume_en
+    required: true
+  - selector: "textarea#cover_letter"
+    source: generate.cover_letter
+
+submit:
+  selector: "button[type='submit'][data-ui='apply-button']"
+  mode: shadow
+  auto_eligible: false
+  pre_submit_checks:
+    - screenshot
+    - assert_no_pii_in_logs
+    - assert_all_required_filled
+  cooldown_seconds: 30

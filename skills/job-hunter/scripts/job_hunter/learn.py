@@ -35,6 +35,7 @@ KNOWN_HOSTS: tuple[tuple[str, str], ...] = (
     ("*jobs.lever.co", "lever"),
     ("*.myworkdayjobs.com", "workday"),
     ("*jobs.ashbyhq.com", "ashby"),
+    ("apply.workable.com", "workable"),
     ("*.smartrecruiters.com", "smartrecruiters"),
     ("*.recruitee.com", "recruitee"),
     ("*.bamboohr.com", "bamboohr"),
