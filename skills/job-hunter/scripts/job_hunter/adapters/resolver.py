@@ -101,7 +101,8 @@ class SecretResolver:
         if candidate.exists():
             return candidate
         # Allow user to specify a relative subpath (e.g. `resume_pt.pdf` -> files/resume_pt.pdf)
-        for variant in (f"{key}.pdf", f"{key}.docx"):
+        # .txt/.md variants feed text targets (cover-letter textareas).
+        for variant in (f"{key}.pdf", f"{key}.docx", f"{key}.txt", f"{key}.md"):
             candidate = self.paths.files_dir / variant
             if candidate.exists():
                 return candidate

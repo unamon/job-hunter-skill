@@ -15,4 +15,6 @@ Then explain:
 
 NEVER suggest filling in PII values via chat. If something is missing, tell the user to edit `<config>/secrets/personal.env` or `<config>/profile.yaml` directly.
 
-If the user wants a live (non-dry-run) fill, point them at `job-hunter apply <id>` from a TTY shell; explain that the live Playwright path is a follow-up to the 0.7.x line (see CHANGELOG).
+If the user wants a live (non-dry-run) fill, point them at `job-hunter apply <id>` in their own terminal — shadow mode blocks on stdin, so it can't run through Claude's Bash tool. It opens a headed Chromium, fills every field, saves `runs/<ts>-apply-<id>/before_submit.png` (secret fields hidden), then asks `y/N/edit`. `y` clicks submit and moves the application to `applied`; `N` leaves the browser open so they can finish by hand. Every attempt is recorded in `fill_attempts` with a `report.json` that holds selectors and outcomes, never values.
+
+Text targets with a `file.*` source (e.g. Workable's cover-letter textarea) are filled from `<data>/files/<key>.txt` or `.md`.

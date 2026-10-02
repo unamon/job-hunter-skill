@@ -135,7 +135,8 @@ Navigate without reading everything. One line per file.
 - `tracking_md.py` — Deterministic markdown sync (`tracking.md` + per-job files). Atomic write-temp-rename. Preserves `<!-- notes:start -->...<!-- notes:end -->` blocks.
 - `sources/` — One module per data source. All implement the `Source` protocol (`discover()`, `fetch_detail()`).
 - `adapters/` — Adapter resolver, YAML schema, source dispatcher (`profile.*`, `secret.*`, `file.*`, `generate.*`).
-- `apply.py` — Playwright runner. Shadow blocks for `y/N/edit`; auto runs cooldown + submits if all 5 gates hold.
+- `apply.py` — Apply logic without a browser: auto gates, pre-submit checks, adapter planning.
+- `apply_live.py` — Playwright shadow fill: fills fields, screenshots with `secret.*` text hidden, blocks for `y/N/edit`. Auto mode currently degrades to shadow (no adapter is `auto_eligible` yet).
 - `learn.py` — Inspects unknown forms, hashes platform signature, drafts adapter into `adapters_inbox/`.
 - `webapp/` — Local FastAPI + HTMX triage UI. `app.py` (factory), `routes.py`, `scoring.py`, `i18n.py`, `templates/`, `static/`, `i18n_data/` (en + pt_BR). Launched via `job-hunter web`. Localhost-only by default.
 

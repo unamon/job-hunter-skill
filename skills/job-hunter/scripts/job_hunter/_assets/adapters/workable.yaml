@@ -19,15 +19,11 @@ fields:
     source: profile.headline
   - selector: "#input_phone"
     source: secret.JOB_HUNTER_PHONE
-  - selector: "#city"
-    source: secret.JOB_HUNTER_CITY
-  - selector: "#country"
-    source: secret.JOB_HUNTER_COUNTRY
   - selector: "input[type='file'][data-ui='resume']"
     source: file.resume_en
     required: true
   - selector: "textarea#cover_letter"
-    source: generate.cover_letter
+    source: file.cover_letter_en
 
 submit:
   selector: "button[type='submit'][data-ui='apply-button']"

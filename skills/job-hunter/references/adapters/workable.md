@@ -20,9 +20,9 @@ match:
 | `#email` | `profile.links.email` |
 | `#headline` | `profile.headline` (optional) |
 | `#input_phone` | `secret.JOB_HUNTER_PHONE` (optional; country-code picker defaults from the visitor's IP) |
-| `#city`, `#country` | `secret.JOB_HUNTER_CITY`, `secret.JOB_HUNTER_COUNTRY` (optional; `#address` and `#postcode` left blank on purpose) |
+| `#address` | not mapped — Workable pre-fills it from the visitor's IP location. `#city`/`#country`/`#postcode` are hidden inputs it composes into `#address`; filling them appends junk. |
 | `input[type=file][data-ui=resume]` | `file.resume_en` — the input's `id` is randomized per page load, select by `data-ui` |
-| `textarea#cover_letter` | `generate.cover_letter` (optional) |
+| `textarea#cover_letter` | `file.cover_letter_en` (optional; text pasted from `files/cover_letter_en.txt` or `.md`) |
 | Custom questions | per job; appear under extra sections with `data-ui` keys |
 
 ## Finding the form from a job board

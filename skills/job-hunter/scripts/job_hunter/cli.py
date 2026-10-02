@@ -12,14 +12,20 @@ from pathlib import Path
 import typer
 from dotenv import load_dotenv
 from rich.console import Console
+from rich.markup import escape
 from rich.table import Table
 from sqlmodel import Session, select
 
 from . import __version__, healthcheck, tracking_md
+from .adapters import Adapter, FieldPlan, SecretResolver
+from .adapters.generators import DEFAULTS as GENERATORS
 from .adapters.loader import list_bundled, list_user, load_adapter, load_all
 from .apply import (
     ApplyInputs,
+    FillReport,
+    has_playwright,
     is_tty_available,
+    new_apply_run_dir,
     plan_for_url,
 )
 from .db import get_engine, run_migrations, session
@@ -28,7 +34,9 @@ from .models import (
     ACTIVE_STAGES,
     TERMINAL_STAGES,
     Application,
+    FillAttempt,
     FillMode,
+    FillOutcome,
     Job,
     SiteAdapter,
     Stage,
@@ -41,10 +49,7 @@ from .sources import REGISTRY, SourceError, get_source
 
 app = typer.Typer(
     name="job-hunter",
-    help=(
-        "Discover, track, and assist with tech job applications "
-        "matching your profile.yaml."
-    ),
+    help="Discover, track, and assist with tech job applications matching your profile.yaml.",
 )
 console = Console()
 
@@ -371,7 +376,7 @@ def apply_cmd(
     for entry in plan.entries:
         marker = "[green]yes[/green]" if entry.has_value else "[red]no[/red]"
         table.add_row(
-            entry.selector,
+            escape(entry.selector),
             f"{entry.source_kind}.{entry.source_key}",
             "yes" if entry.required else "no",
             marker,
@@ -389,18 +394,99 @@ def apply_cmd(
         console.print("[dim]--dry-run: skipping browser.[/dim]")
         return
 
-    if fill_mode == FillMode.SHADOW and not is_tty_available():
+    if fill_mode == FillMode.DRY_RUN:
+        return
+    if fill_mode == FillMode.AUTO:
+        # No bundled adapter is auto_eligible yet, so the gates always degrade.
+        console.print("[yellow]auto mode gates not met[/yellow]; degrading to shadow.")
+        fill_mode = FillMode.SHADOW
+    if not is_tty_available():
         console.print(
             "[yellow]shadow mode needs a TTY[/yellow]; in headless contexts the run "
             "would auto-abort to `aborted_for_review`. Use `--mode dry_run` to preview."
         )
         raise typer.Exit(1)
+    if not has_playwright():
+        console.print("[red]playwright not installed[/red]; run `job doctor`.")
+        raise typer.Exit(1)
 
-    console.print(
-        "[yellow]live browser fill is wired through Playwright but not yet enabled "
-        "in this build. Use `--dry-run` for now or open the URL manually.[/yellow]"
+    _run_live_fill(
+        paths, id, url=url, company=company, title=title, inputs=inputs, adapter=adapter, plan=plan
     )
-    raise typer.Exit(2)
+
+
+def _run_live_fill(
+    paths: Paths,
+    id: int,
+    *,
+    url: str,
+    company: str,
+    title: str,
+    inputs: ApplyInputs,
+    adapter: Adapter,
+    plan: FieldPlan,
+) -> None:
+    from .apply_live import launch_and_run, write_report
+
+    resolver = SecretResolver(paths, generators=GENERATORS)
+    generate_inputs = {
+        "job_title": title,
+        "company": company,
+        "role_summary": "",
+        "public_profile_blurb": str(resolver._profile_value("public_profile_blurb") or ""),
+    }
+    run_dir = new_apply_run_dir(paths, id)
+    started = datetime.now(UTC)
+    label = f"{id:03d} {company}"
+    try:
+        report = launch_and_run(
+            url,
+            adapter,
+            plan,
+            resolver,
+            generate_inputs=generate_inputs,
+            run_dir=run_dir,
+            locale_hint=inputs.locale_hint,
+            label=label,
+            log_paths=sorted(paths.logs_dir.glob("*.log")) if paths.logs_dir.exists() else [],
+        )
+    except Exception as e:  # noqa: BLE001 — record the failed attempt, then surface it
+        report = FillReport(
+            started_at=started.isoformat(),
+            finished_at=datetime.now(UTC).isoformat(),
+            outcome=FillOutcome.FAILED.value,
+            artifacts_path=str(run_dir),
+            fields_total=len(adapter.fields),
+            reason=type(e).__name__,
+        )
+        write_report(run_dir, report)
+        console.print(f"[red]fill failed[/red]: {type(e).__name__}. Artifacts: {run_dir}")
+
+    now = datetime.now(UTC).replace(tzinfo=None)
+    with Session(get_engine(paths)) as sess:
+        sess.add(
+            FillAttempt(
+                application_id=id,
+                started_at=started.replace(tzinfo=None),
+                finished_at=now,
+                outcome=report.outcome,
+                artifacts_path=str(run_dir),
+                fields_filled=report.fields_filled,
+                fields_total=report.fields_total,
+                mode=FillMode.SHADOW.value,
+            )
+        )
+        app_row = sess.get(Application, id)
+        if app_row is not None:
+            app_row.adapter_used = adapter.platform_signature
+            sess.add(app_row)
+        sess.commit()
+
+    console.print(f"outcome: [bold]{report.outcome}[/bold]  (artifacts: {run_dir})")
+    if report.outcome == FillOutcome.SUBMITTED.value:
+        _transition(id, Stage.APPLIED, note=f"submitted via {adapter.platform_signature} (shadow)")
+    elif report.outcome == FillOutcome.FAILED.value:
+        raise typer.Exit(1)
 
 
 @app.command(name="approve")
