@@ -14,6 +14,7 @@ import subprocess
 import sys
 from collections.abc import Iterator
 from dataclasses import dataclass
+from pathlib import Path
 
 from rich.console import Console
 from rich.table import Table
@@ -47,33 +48,53 @@ def _uv_installed() -> Check:
 
 
 def _playwright_chromium(paths: Paths) -> Check:
-    """We don't import playwright here (slow); we call its CLI lazily."""
+    """Ask the bundled playwright (same interpreter) where Chromium lives.
+
+    `playwright install --dry-run` exits 0 whether or not the browser is
+    present, so we parse its install location and check the directory.
+    Running via `sys.executable -m playwright` works even when the
+    `playwright` console script isn't on PATH (e.g. `uv tool install`).
+    """
     if "BROWSER_WS_ENDPOINT" in os.environ:
         return Check(
             "Playwright Chromium",
             True,
             f"skipped — using remote endpoint {os.environ['BROWSER_WS_ENDPOINT']!r}",
         )
-    pw = shutil.which("playwright")
-    if pw is None:
-        return Check("Playwright Chromium", False, "`playwright` CLI not on PATH")
     try:
         result = subprocess.run(
-            [pw, "install", "--dry-run", "chromium"],
+            [sys.executable, "-m", "playwright", "install", "--dry-run", "chromium"],
             capture_output=True,
             text=True,
-            timeout=10,
+            timeout=30,
             check=False,
         )
     except subprocess.SubprocessError as exc:
         return Check("Playwright Chromium", False, f"check failed: {exc}")
     if result.returncode != 0:
+        return Check("Playwright Chromium", False, "playwright package not importable")
+    location = _chromium_install_location(result.stdout)
+    if location is None:
+        return Check("Playwright Chromium", False, "could not parse `playwright install --dry-run`")
+    if not location.exists():
         return Check(
             "Playwright Chromium",
             False,
-            "run `playwright install chromium`",
+            f"not installed — run `{Path(sys.executable).name} -m playwright install chromium`",
         )
-    return Check("Playwright Chromium", True, "installed")
+    return Check("Playwright Chromium", True, str(location))
+
+
+def _chromium_install_location(dry_run_output: str) -> Path | None:
+    """First `Install location:` after the `browser: chromium ...` header."""
+    in_chromium = False
+    for line in dry_run_output.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("browser:"):
+            in_chromium = stripped.split()[1:2] == ["chromium"]
+        elif in_chromium and stripped.startswith("Install location:"):
+            return Path(stripped.split(":", 1)[1].strip())
+    return None
 
 
 def _xdg_dirs(paths: Paths) -> Iterator[Check]:
@@ -94,6 +115,10 @@ def _secrets_perms(paths: Paths) -> Check:
             False,
             f"missing {p} — run `job init` and edit (never `cat` it)",
         )
+    if os.name == "nt":
+        # POSIX mode bits are meaningless on Windows (always reports 0o666).
+        # %LOCALAPPDATA% is already ACL'd to the current user.
+        return Check("Secrets file present", True, f"{p} (per-user AppData)")
     mode = p.stat().st_mode & 0o777
     if mode == 0o600:
         return Check("Secrets file 0600", True, f"{p} permissions ok")
@@ -109,6 +134,8 @@ def _secrets_world_readable(paths: Paths) -> Check:
     p = paths.secrets_env
     if not p.exists():
         return Check("Secrets not world-readable", True, "n/a (file absent)")
+    if os.name == "nt":
+        return Check("Secrets not world-readable", True, "n/a on Windows (per-user ACL)")
     mode = p.stat().st_mode
     world = mode & stat.S_IROTH
     return Check(

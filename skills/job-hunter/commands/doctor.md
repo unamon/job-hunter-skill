@@ -7,5 +7,5 @@ Run `job-hunter doctor` and report the result.
 
 If any check fails:
 - Quote the failing row(s).
-- Give the exact fix from `skills/job-hunter/references/troubleshooting.md` (e.g. `chmod 600 ~/.config/job-hunter/secrets/personal.env`, `playwright install chromium`).
-- Do NOT print the contents of `~/.config/job-hunter/secrets/personal.env`.
+- Give the exact fix from `skills/job-hunter/references/troubleshooting.md` (e.g. `chmod 600 <config>/secrets/personal.env` on macOS/Linux, `python -m playwright install chromium`).
+- Do NOT print the contents of `<config>/secrets/personal.env`.

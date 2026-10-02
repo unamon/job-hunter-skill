@@ -4,7 +4,7 @@ Opt-in transport for Indeed + Glassdoor only. Self-hosted via Docker. Set:
 
     FIRECRAWL_ENDPOINT=http://localhost:3002
 
-in `~/.config/job-hunter/secrets/personal.env`. Presence of this env var is
+in the secrets file (`job-hunter info` shows where). Presence of this env var is
 the opt-in signal; no additional config flag.
 
 PII boundary: this client is read-only. It scrapes job listings. It MUST NOT

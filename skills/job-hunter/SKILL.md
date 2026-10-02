@@ -15,14 +15,15 @@ Discover, track, and assist with tech job applications (target roles come from t
 
 This skill keeps personally identifiable information (CPF, RG, phone, full address, birth date, salary expectations, bank info, LinkedIn session cookie) entirely out of the model's context window. Violating this voids the safety guarantee. Treat the secrets file as if reading it would corrupt the database.
 
-**Never run any of these commands against `$XDG_CONFIG_HOME/job-hunter/secrets/personal.env`** (default `~/.config/job-hunter/secrets/personal.env`):
+**Never run any of these commands against `<config>/secrets/personal.env`** (see Runtime layout for `<config>`):
 
 ```
 cat   head   tail   less   more   bat   view
 grep  rg     ag     awk    sed
 printenv  env  source
 strings  od   xxd   hexdump
-cp <secrets> <anywhere-the-model-might-read>
+type  Get-Content  gc  Select-String  findstr  Import-Csv   # Windows
+cp / copy / Copy-Item <secrets> <anywhere-the-model-might-read>
 ```
 
 Also never:
@@ -89,18 +90,26 @@ Defaults:
 
 ## Runtime layout
 
-The repo is read-only after install. All mutable state lives in XDG paths in the user's home.
+The repo is read-only after install. All mutable state lives in three per-user roots, called `<config>`, `<data>` and `<state>` throughout this skill and its commands. **Run `job-hunter info` once per session to get the real paths** — don't guess them.
+
+| Root | macOS / Linux default | Windows default |
+|------|----------------------|-----------------|
+| `<config>` | `$XDG_CONFIG_HOME/job-hunter` or `~/.config/job-hunter` | `%LOCALAPPDATA%\job-hunter` |
+| `<data>` | `$XDG_DATA_HOME/job-hunter` or `~/.local/share/job-hunter` | `%LOCALAPPDATA%\job-hunter` |
+| `<state>` | `$XDG_STATE_HOME/job-hunter` or `~/.local/state/job-hunter` | `%LOCALAPPDATA%\job-hunter` |
+
+On Windows all three roots are the same folder. `XDG_*_HOME` env vars override the defaults on every OS.
 
 ```
-$XDG_CONFIG_HOME/job-hunter/        # default ~/.config/job-hunter/
-├── config.yaml                     # XDG path overrides, defaults
+<config>/
+├── config.yaml                     # path overrides, defaults
 ├── profile.yaml                    # non-PII profile (roles, locations, links)
 ├── field_labels.yaml               # user overrides for the bundled label dictionary
 └── secrets/
-    ├── personal.env                # chmod 600, NEVER READ BY THIS SKILL
+    ├── personal.env                # chmod 600 on POSIX; NEVER READ BY THIS SKILL
     └── README.md
 
-$XDG_DATA_HOME/job-hunter/          # default ~/.local/share/job-hunter/
+<data>/
 ├── jobs.db                         # SQLite, source of truth
 ├── tracking.md                     # human-readable mirror
 ├── tracking/                       # per-job markdown files
@@ -109,7 +118,7 @@ $XDG_DATA_HOME/job-hunter/          # default ~/.local/share/job-hunter/
 ├── files/                          # resumes, cover letter base, attachments
 └── runs/<iso-timestamp>/           # per-run artifacts (report.json, screenshots, HAR)
 
-$XDG_STATE_HOME/job-hunter/         # default ~/.local/state/job-hunter/
+<state>/
 └── logs/                           # rotating logs + ratelimit.json token buckets
 ```
 
@@ -134,7 +143,7 @@ At `scripts/` root (sibling of the package):
 
 - `lint_secret_leaks.py` — Scans runtime dirs for CPF/CNPJ/RG/phone regex matches. Exits non-zero on hit.
 - `healthcheck.py` — Used by `job doctor`. Validates pyproject install, Playwright browser, XDG perms, gh auth (if `adapter contribute` is to work).
-- `install_hook.sh` — Idempotent bootstrap: creates XDG dirs, copies templates from `assets/` if absent, prompts user to `chmod 600` the secrets file.
+- `install_hook.sh` — POSIX-only shell bootstrap kept for running by hand. `job init` uses the cross-platform Python port (`cli._bootstrap`): creates the runtime dirs, copies templates from `assets/` if absent, `chmod 600`s the secrets file on POSIX.
 
 DB migrations live at `scripts/migrations/NNN_description.sql` and are applied in lexical order.
 
@@ -160,7 +169,7 @@ Read these only when working on that specific area. They are NOT part of the alw
 
 | Symptom | Likely cause | Recovery |
 |---------|--------------|---------|
-| `job doctor` reports "secrets file world-readable" | Forgot `chmod 600 ~/.config/job-hunter/secrets/personal.env` | `chmod 600` the file; doctor exits clean |
+| `job doctor` reports "secrets file world-readable" (macOS/Linux) | Forgot `chmod 600 <config>/secrets/personal.env` | `chmod 600` the file; doctor exits clean. n/a on Windows — `%LOCALAPPDATA%` is already per-user. |
 | LinkedIn discover returns 0 results unexpectedly | Cookie expired or LinkedIn flagged the session | Refresh `LINKEDIN_LI_AT` from browser devtools; `references/sources/linkedin.md` has step-by-step |
 | `apply` reports `aborted_for_review` immediately | No adapter matches the URL signature; `learn.py` drafted a new one | Edit the draft in `adapters_inbox/`, run `job adapter test <sig> --url ...`, then `job adapter promote <sig>` |
 | Auto mode refuses to submit | One of 5 gates failed (success rate <90%, missing `--i-understand`, `generate.*` without approval, etc.) | `job apply <id>` (without `--mode auto`) submits via shadow; or fix the gate per error message |

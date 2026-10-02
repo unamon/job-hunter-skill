@@ -32,7 +32,7 @@ def load_query(paths: Paths) -> SearchQuery:
     if not paths.profile_yaml.exists():
         return SearchQuery()
     try:
-        data = yaml.safe_load(paths.profile_yaml.read_text()) or {}
+        data = yaml.safe_load(paths.profile_yaml.read_text(encoding="utf-8")) or {}
     except yaml.YAMLError as e:
         logger.warning("profile.yaml unreadable: %s", e)
         return SearchQuery()

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import shutil
 import subprocess
 from datetime import UTC, datetime
@@ -33,7 +34,7 @@ from .models import (
     Stage,
     StageHistory,
 )
-from .paths import resolve
+from .paths import Paths, resolve
 from .salary import aggregate as salary_aggregate
 from .salary import suggest_expectation
 from .sources import REGISTRY, SourceError, get_source
@@ -66,9 +67,9 @@ def info() -> None:
     """Print build info."""
     console.print(f"[bold]job-hunter[/bold] {__version__}")
     paths = resolve()
-    console.print(f"Config: {paths.config_dir}")
-    console.print(f"Data:   {paths.data_dir}")
-    console.print(f"State:  {paths.state_dir}")
+    console.print(f"Config: {paths.config_dir}", soft_wrap=True)
+    console.print(f"Data:   {paths.data_dir}", soft_wrap=True)
+    console.print(f"State:  {paths.state_dir}", soft_wrap=True)
 
 
 @app.command()
@@ -78,26 +79,7 @@ def init() -> None:
     Safe to re-run after upgrades — it never overwrites your edits.
     """
     paths = resolve()
-
-    hook = _locate_install_hook()
-    if hook is None:
-        console.print(
-            "[red]install_hook.sh not found.[/red] "
-            "If you installed via wheel, run the equivalent manually:"
-        )
-        paths.ensure()
-    else:
-        console.print(f"Running install hook: {hook}")
-        result = subprocess.run(
-            ["bash", str(hook)],
-            check=False,
-            text=True,
-        )
-        if result.returncode != 0:
-            console.print("[red]install_hook.sh failed[/red]")
-            raise typer.Exit(result.returncode)
-
-    paths.ensure()
+    _bootstrap(paths)
     applied = run_migrations(paths)
     if applied:
         console.print(f"Applied migrations: {', '.join(applied)}")
@@ -588,12 +570,12 @@ def adapter_mark_cmd(signature: str = typer.Argument(...)) -> None:
             "can be marked auto-eligible (bundled stays conservative)."
         )
         raise typer.Exit(1)
-    text = user.read_text()
+    text = user.read_text(encoding="utf-8")
     new = text.replace("auto_eligible: false", "auto_eligible: true", 1)
     if new == text:
         console.print(f"adapter {signature} already auto_eligible (or no marker found)")
         return
-    user.write_text(new)
+    user.write_text(new, encoding="utf-8")
     console.print(f"adapter {signature}: auto_eligible: true")
 
 
@@ -910,14 +892,45 @@ def lint() -> None:
     raise typer.Exit(rc)
 
 
-def _locate_install_hook() -> Path | None:
-    """Find install_hook.sh in source layout. Returns None in wheel-only installs."""
+def _locate_assets_dir() -> Path | None:
+    """Find skills/job-hunter/assets in source layout. None in wheel-only installs."""
     here = Path(__file__).resolve()
-    # source layout: scripts/job_hunter/cli.py -> scripts/install_hook.sh
-    candidate = here.parent.parent / "install_hook.sh"
-    if candidate.exists():
+    # source layout: scripts/job_hunter/cli.py -> assets/
+    candidate = here.parent.parent.parent / "assets"
+    if candidate.is_dir():
         return candidate
     return None
+
+
+def _bootstrap(paths: Paths) -> None:
+    """Python port of install_hook.sh so `init` works on Windows too.
+
+    Creates the runtime layout under the platformdirs roots, copies the
+    profile/secrets templates only if absent (never clobbers edits), and
+    chmods the secrets file 600 on POSIX. Never reads the secrets file.
+    """
+    paths.ensure()
+    assets = _locate_assets_dir()
+    if assets is None:
+        console.print(
+            "[yellow]Template assets not found (wheel install?).[/yellow] "
+            f"Create {paths.profile_yaml} and {paths.secrets_env} by hand."
+        )
+    else:
+        for src, dst in (
+            (assets / "personal.env.example", paths.secrets_env),
+            (assets / "profile.yaml.example", paths.profile_yaml),
+        ):
+            if dst.exists():
+                console.print(f"  skip (exists): {dst}", soft_wrap=True)
+                continue
+            shutil.copyfile(src, dst)
+            console.print(f"  copied: {src.name} -> {dst}", soft_wrap=True)
+    if os.name != "nt" and paths.secrets_env.exists():
+        paths.secrets_env.chmod(0o600)
+    console.print(f"Config dir : {paths.config_dir}", soft_wrap=True)
+    console.print(f"Data dir   : {paths.data_dir}", soft_wrap=True)
+    console.print(f"State dir  : {paths.state_dir}", soft_wrap=True)
 
 
 if __name__ == "__main__":

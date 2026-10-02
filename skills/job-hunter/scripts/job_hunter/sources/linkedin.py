@@ -24,6 +24,7 @@ import httpx
 from selectolax.parser import HTMLParser
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential_jitter
 
+from ..paths import resolve as resolve_paths
 from .base import (
     JobPosting,
     RateLimitConfig,
@@ -46,7 +47,7 @@ class LinkedInSource:
         v = os.environ.get("LINKEDIN_LI_AT")
         if not v:
             raise SourceError(
-                "LINKEDIN_LI_AT not set. Add it to ~/.config/job-hunter/secrets/personal.env "
+                f"LINKEDIN_LI_AT not set. Add it to {resolve_paths().secrets_env} "
                 "(see references/sources/linkedin.md for how to capture)."
             )
         return v

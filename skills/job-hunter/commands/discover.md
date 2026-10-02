@@ -11,4 +11,4 @@ Steps:
 2. Show the report counts (discovered / new / updated / failed) and surface any errors.
 3. If new jobs were added, suggest `/job-hunter:list` so the user sees them.
 
-PII safety: never echo `~/.config/job-hunter/secrets/personal.env` or any LINKEDIN_LI_AT value in chat. The CLI loads them via `python-dotenv` in its own process.
+PII safety: never echo `<config>/secrets/personal.env` or any LINKEDIN_LI_AT value in chat. The CLI loads them via `python-dotenv` in its own process.

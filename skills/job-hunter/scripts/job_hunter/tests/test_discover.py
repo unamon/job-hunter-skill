@@ -34,7 +34,7 @@ def isolated(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Isolated:
 
 
 def _fixture_items() -> list[dict[str, object]]:
-    data = json.loads((FIXTURES / "remoteok.json").read_text())
+    data = json.loads((FIXTURES / "remoteok.json").read_text(encoding="utf-8"))
     return [item for item in data[1:] if isinstance(item, dict) and item.get("id")]
 
 
@@ -123,6 +123,6 @@ def test_run_dir_and_report_written(isolated: Isolated) -> None:
     assert runs, "no run dir created"
     report_file = runs[-1] / "report.json"
     assert report_file.exists()
-    data = json.loads(report_file.read_text())
+    data = json.loads(report_file.read_text(encoding="utf-8"))
     assert data["source"] == "remoteok"
     assert "started_at" in data and "finished_at" in data

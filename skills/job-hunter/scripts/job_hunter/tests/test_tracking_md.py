@@ -130,17 +130,17 @@ def test_notes_block_preserved(db_with_data: DBFixture) -> None:
     assert targets, "expected per-job files"
     target = targets[0]
 
-    text = target.read_text()
+    text = target.read_text(encoding="utf-8")
     user_added = "Things I'm researching:\n- Their CI setup"
     new = text.replace(
         tracking_md.NOTES_START + "\n\n" + tracking_md.NOTES_END,
         f"{tracking_md.NOTES_START}\n{user_added}\n{tracking_md.NOTES_END}",
     )
-    target.write_text(new)
+    target.write_text(new, encoding="utf-8", newline="\n")
 
     with Session(eng) as sess:
         tracking_md.regenerate(p, sess, now=FROZEN_NOW)
-    rewritten = target.read_text()
+    rewritten = target.read_text(encoding="utf-8")
     assert user_added in rewritten, "user notes lost across regeneration"
 
 
@@ -148,7 +148,7 @@ def test_index_contains_active_and_stages(db_with_data: DBFixture) -> None:
     p, eng = db_with_data
     with Session(eng) as sess:
         tracking_md.regenerate(p, sess, now=FROZEN_NOW)
-    text = p.tracking_index.read_text()
+    text = p.tracking_index.read_text(encoding="utf-8")
     assert "## Active pipeline" in text
     assert "Nubank" in text
     assert "Stark Bank" in text

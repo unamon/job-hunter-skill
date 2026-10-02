@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import pytest
@@ -46,6 +47,14 @@ def test_defaults_when_xdg_unset(monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     monkeypatch.setenv("HOME", str(fake_home))
 
     p = paths_mod.resolve()
+    if sys.platform == "win32":
+        # platformdirs uses the Known Folder API (not HOME): %LOCALAPPDATA%\job-hunter
+        assert p.config_dir.name == "job-hunter"
+        assert p.config_dir == p.data_dir == p.state_dir
+        return
+    if sys.platform == "darwin":
+        assert "Library" in p.config_dir.parts
+        return
     # On Linux, platformdirs falls back to ~/.config, ~/.local/share, ~/.local/state
     assert p.config_dir.as_posix().endswith(".config/job-hunter")
     assert p.data_dir.as_posix().endswith(".local/share/job-hunter")

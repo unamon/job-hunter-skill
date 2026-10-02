@@ -19,7 +19,7 @@ DEFAULT: Final[str] = "en"
 def load(locale: str) -> dict[str, str]:
     if locale not in SUPPORTED:
         locale = DEFAULT
-    raw = (files("job_hunter.webapp.i18n_data") / f"{locale}.json").read_text()
+    raw = (files("job_hunter.webapp.i18n_data") / f"{locale}.json").read_text(encoding="utf-8")
     return dict(json.loads(raw))
 
 

@@ -54,7 +54,7 @@ class GupySource:
         if not cfg.exists():
             return list(DEFAULT_COMPANIES)
         try:
-            data = yaml.safe_load(cfg.read_text()) or {}
+            data = yaml.safe_load(cfg.read_text(encoding="utf-8")) or {}
         except yaml.YAMLError:
             return list(DEFAULT_COMPANIES)
         companies = data.get("companies") if isinstance(data, dict) else None

@@ -90,7 +90,7 @@ FIXTURES = Path(__file__).parent / "fixtures"
 def test_indeed_routes_through_firecrawl_when_endpoint_set(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("FIRECRAWL_ENDPOINT", "http://fc.test")
 
-    indeed_html = (FIXTURES / "indeed.html").read_text()
+    indeed_html = (FIXTURES / "indeed.html").read_text(encoding="utf-8")
     routes: list[str] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -117,7 +117,7 @@ def test_indeed_direct_fetch_when_no_firecrawl(monkeypatch: pytest.MonkeyPatch) 
     monkeypatch.delenv("FIRECRAWL_ENDPOINT", raising=False)
     monkeypatch.delenv("JOB_HUNTER_FIRECRAWL_ENDPOINT", raising=False)
 
-    indeed_html = (FIXTURES / "indeed.html").read_text()
+    indeed_html = (FIXTURES / "indeed.html").read_text(encoding="utf-8")
     routes: list[str] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -141,7 +141,7 @@ def test_glassdoor_routes_through_firecrawl(monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.delenv("GLASSDOOR_GD_ID", raising=False)
     monkeypatch.delenv("GLASSDOOR_UAC", raising=False)
 
-    gd_html = (FIXTURES / "glassdoor_listing.html").read_text()
+    gd_html = (FIXTURES / "glassdoor_listing.html").read_text(encoding="utf-8")
 
     transport = httpx.MockTransport(lambda _: httpx.Response(200, json=_fc_response(gd_html)))
     src = GlassdoorSource()

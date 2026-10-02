@@ -9,16 +9,16 @@ You're producing a Reactive Resume (https://github.com/amruthpillai/reactive-res
 ## Inputs you need
 
 1. **The JD.** Run `job-hunter show $ARGUMENTS` and use the printed `description`. If empty/short, fetch the `url` via WebFetch for the long-form JD.
-2. **The user's profile.** Read `$XDG_CONFIG_HOME/job-hunter/profile.yaml` (default `~/.config/job-hunter/profile.yaml`) — that's the non-PII profile (roles, links, achievements, experience timeline). Use only what's there. If a field is missing, leave the corresponding Reactive Resume section empty rather than inventing content.
+2. **The user's profile.** Read `<config>/profile.yaml` (`job-hunter info` prints `<config>`) — that's the non-PII profile (roles, links, achievements, experience timeline). Use only what's there. If a field is missing, leave the corresponding Reactive Resume section empty rather than inventing content.
 
 ## What you must NOT read
 
-- `$XDG_CONFIG_HOME/job-hunter/secrets/personal.env` — that file holds CPF/RG/phone/address/birthdate/etc. Reactive Resume's PII fields stay empty; the user fills them in the UI after import.
+- `<config>/secrets/personal.env` — that file holds CPF/RG/phone/address/birthdate/etc. Reactive Resume's PII fields stay empty; the user fills them in the UI after import.
 - Any address, birth date, phone number, government ID, or full-resolution headshot.
 
 ## Output
 
-Write a single JSON file conforming to Reactive Resume's import schema (the shape exported by https://github.com/amruthpillai/reactive-resume "Export → JSON"). If `--out` was provided, write there; otherwise default to `~/.local/share/job-hunter/files/resume_<application-id>_<YYYY-MM-DD>.json`.
+Write a single JSON file conforming to Reactive Resume's import schema (the shape exported by https://github.com/amruthpillai/reactive-resume "Export → JSON"). If `--out` was provided, write there; otherwise default to `<data>/files/resume_<application-id>_<YYYY-MM-DD>.json`.
 
 Top-level keys you should populate, in priority order:
 

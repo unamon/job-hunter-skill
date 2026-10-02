@@ -50,7 +50,7 @@ def _list_migrations() -> list[tuple[str, str]]:
     out: list[tuple[str, str]] = []
     files = resources.files(MIGRATIONS_PACKAGE)
     for entry in sorted(p.name for p in files.iterdir() if p.name.endswith(".sql")):
-        sql = (files / entry).read_text()
+        sql = (files / entry).read_text(encoding="utf-8")
         out.append((entry, sql))
     return out
 

@@ -4,10 +4,11 @@ Resolution order:
 1. If `JOB_HUNTER_HOME_OVERRIDE` is set (used by tests), all three roots
    live under `${override}/{config,data,state}/job-hunter/`.
 2. Otherwise, honor `XDG_CONFIG_HOME` / `XDG_DATA_HOME` / `XDG_STATE_HOME`.
-3. Otherwise, platformdirs defaults (Linux: `~/.config`, `~/.local/share`, `~/.local/state`).
+3. Otherwise, platformdirs defaults (Linux: `~/.config`, `~/.local/share`,
+   `~/.local/state`; Windows: all three are `%LOCALAPPDATA%\\job-hunter`).
 
 The override exists so tests can run with a clean filesystem under `tmp_path`
-without touching the developer's real `~/.config`. Never use it in prod.
+without touching the developer's real config dir. Never use it in prod.
 """
 
 from __future__ import annotations
@@ -127,12 +128,19 @@ def resolve() -> Paths:
             state_dir=override / "state" / APP_NAME,
         )
 
+    # platformdirs only reads XDG_* on Linux; check them explicitly so the
+    # documented override also works on Windows/macOS.
     dirs = PlatformDirs(appname=APP_NAME, appauthor=False, roaming=False)
     return Paths(
-        config_dir=Path(dirs.user_config_dir),
-        data_dir=Path(dirs.user_data_dir),
-        state_dir=Path(dirs.user_state_dir),
+        config_dir=_xdg_or("XDG_CONFIG_HOME", dirs.user_config_dir),
+        data_dir=_xdg_or("XDG_DATA_HOME", dirs.user_data_dir),
+        state_dir=_xdg_or("XDG_STATE_HOME", dirs.user_state_dir),
     )
+
+
+def _xdg_or(var: str, default: str) -> Path:
+    val = os.environ.get(var)
+    return Path(val).expanduser() / APP_NAME if val else Path(default)
 
 
 @lru_cache(maxsize=1)

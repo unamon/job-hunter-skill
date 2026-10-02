@@ -151,7 +151,7 @@ submit:
     (populated.adapters_user / f"{sig}.yaml").write_text(yaml_text)
     r = runner.invoke(app, ["adapter", "mark-auto-eligible", sig])
     assert r.exit_code == 0
-    new_text = (populated.adapters_user / f"{sig}.yaml").read_text()
+    new_text = (populated.adapters_user / f"{sig}.yaml").read_text(encoding="utf-8")
     assert "auto_eligible: true" in new_text
 
 

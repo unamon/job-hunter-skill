@@ -134,13 +134,13 @@ def load_field_labels(paths: Paths, bundled_assets: Path) -> dict[str, Any]:
     bundle = bundled_assets / "field_labels.yaml"
     base: dict[str, Any] = {}
     if bundle.exists():
-        raw = yaml.safe_load(bundle.read_text()) or {}
+        raw = yaml.safe_load(bundle.read_text(encoding="utf-8")) or {}
         if isinstance(raw, dict):
             base = raw
     user = paths.field_labels_override
     if user.exists():
         try:
-            override = yaml.safe_load(user.read_text()) or {}
+            override = yaml.safe_load(user.read_text(encoding="utf-8")) or {}
             if isinstance(override, dict):
                 base = {**base, **override}
         except yaml.YAMLError:
@@ -255,7 +255,7 @@ def _label_text(node: object) -> str:
 def save_inbox_draft(paths: Paths, signature: str, draft: dict[str, Any]) -> Path:
     paths.adapters_inbox.mkdir(parents=True, exist_ok=True)
     target = paths.adapters_inbox / f"{signature}.yaml"
-    target.write_text(yaml.safe_dump(draft, sort_keys=False, allow_unicode=True))
+    target.write_text(yaml.safe_dump(draft, sort_keys=False, allow_unicode=True), encoding="utf-8")
     return target
 
 

@@ -177,7 +177,7 @@ def _load_profile(paths: Paths) -> dict[str, Any]:
     if not paths.profile_yaml.exists():
         return {}
     try:
-        data = yaml.safe_load(paths.profile_yaml.read_text()) or {}
+        data = yaml.safe_load(paths.profile_yaml.read_text(encoding="utf-8")) or {}
     except yaml.YAMLError:
         return {}
     if not isinstance(data, dict):

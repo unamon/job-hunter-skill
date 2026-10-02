@@ -68,7 +68,7 @@ def _read_cache(paths: Paths) -> Rates | None:
     if not p.exists():
         return None
     try:
-        data = json.loads(p.read_text())
+        data = json.loads(p.read_text(encoding="utf-8"))
         return Rates(
             base=str(data["base"]),
             fetched_at=datetime.fromisoformat(data["fetched_at"]),
@@ -88,7 +88,7 @@ def _write_cache(paths: Paths, rates: Rates) -> None:
         "rates": rates.rates,
     }
     tmp = p.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(body, indent=2, sort_keys=True))
+    tmp.write_text(json.dumps(body, indent=2, sort_keys=True), encoding="utf-8")
     tmp.replace(p)
 
 

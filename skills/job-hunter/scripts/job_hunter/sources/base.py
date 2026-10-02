@@ -138,14 +138,14 @@ class RateLimiter:
         if not self.path.exists():
             return {}
         try:
-            data: dict[str, dict[str, float]] = json.loads(self.path.read_text())
+            data: dict[str, dict[str, float]] = json.loads(self.path.read_text(encoding="utf-8"))
             return data
         except (OSError, json.JSONDecodeError):
             return {}
 
     def _save(self, state: dict[str, dict[str, float]]) -> None:
         tmp = self.path.with_suffix(self.path.suffix + ".tmp")
-        tmp.write_text(json.dumps(state, sort_keys=True))
+        tmp.write_text(json.dumps(state, sort_keys=True), encoding="utf-8")
         tmp.replace(self.path)
 
     async def wait(self, cfg: RateLimitConfig) -> None:
@@ -199,4 +199,6 @@ def new_run_dir(paths: Paths, source: str) -> Path:
 
 
 def write_report(run_dir: Path, report: DiscoveryReport) -> None:
-    (run_dir / "report.json").write_text(json.dumps(asdict(report), indent=2, sort_keys=True))
+    (run_dir / "report.json").write_text(
+        json.dumps(asdict(report), indent=2, sort_keys=True), encoding="utf-8"
+    )

@@ -23,7 +23,7 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 
 def test_indeed_parser_extracts_three_cards() -> None:
-    html = (FIXTURES / "indeed.html").read_text()
+    html = (FIXTURES / "indeed.html").read_text(encoding="utf-8")
     postings = parse_indeed(html, "https://br.indeed.com")
     assert len(postings) == 3
     titles = {p.title for p in postings}
@@ -40,7 +40,7 @@ def test_indeed_parser_extracts_three_cards() -> None:
 
 
 def test_indeed_parses_usd_salary() -> None:
-    html = (FIXTURES / "indeed.html").read_text()
+    html = (FIXTURES / "indeed.html").read_text(encoding="utf-8")
     kmp = next(
         p for p in parse_indeed(html, "https://br.indeed.com") if "Kotlin Multiplatform" in p.title
     )
@@ -81,7 +81,7 @@ def test_indeed_salary_parser_currencies(
 
 
 def test_glassdoor_listing_parser() -> None:
-    html = (FIXTURES / "glassdoor_listing.html").read_text()
+    html = (FIXTURES / "glassdoor_listing.html").read_text(encoding="utf-8")
     postings = parse_glassdoor(html, "https://www.glassdoor.com")
     assert len(postings) == 2
     senior = next(p for p in postings if "Senior" in p.title)
@@ -93,7 +93,7 @@ def test_glassdoor_listing_parser() -> None:
 
 
 def test_glassdoor_salary_page_parser() -> None:
-    html = (FIXTURES / "glassdoor_salary.html").read_text()
+    html = (FIXTURES / "glassdoor_salary.html").read_text(encoding="utf-8")
     est = parse_salary_page(html, role="Senior Android Engineer", location="Brazil")
     assert est is not None
     assert est.p25 == 98000

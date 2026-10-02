@@ -115,7 +115,7 @@ def _parse_adapter(data: dict[str, Any], path: Path | None = None) -> Adapter:
 
 def load_adapter(path: Path) -> Adapter:
     try:
-        data = yaml.safe_load(path.read_text())
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
     except yaml.YAMLError as e:
         raise AdapterError(f"{path}: invalid YAML: {e}") from e
     if not isinstance(data, dict):

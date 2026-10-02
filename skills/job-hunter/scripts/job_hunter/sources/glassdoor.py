@@ -22,6 +22,7 @@ import httpx
 from selectolax.parser import HTMLParser, Node
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential_jitter
 
+from ..paths import resolve as resolve_paths
 from .base import JobPosting, RateLimitConfig, SearchQuery, SourceError
 from .indeed import _is_remote, _looks_like_captcha, _parse_salary
 
@@ -43,7 +44,7 @@ class GlassdoorSource:
         if not (gd_id and uac):
             raise SourceError(
                 "Glassdoor requires GLASSDOOR_GD_ID and GLASSDOOR_UAC in "
-                "~/.config/job-hunter/secrets/personal.env. Capture them after "
+                f"{resolve_paths().secrets_env}. Capture them after "
                 "logging in at glassdoor.com — see references/sources/glassdoor.md."
             )
         return {"gdId": gd_id, "_uac": uac}

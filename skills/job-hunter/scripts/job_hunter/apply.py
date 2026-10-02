@@ -15,8 +15,8 @@ tests marked `playwright`.
 
 from __future__ import annotations
 
+import importlib.util
 import os
-import shutil
 import sys
 import time
 from collections.abc import Callable
@@ -323,7 +323,8 @@ def confirm_submit_blocking(label: str) -> str:
 
 
 def has_playwright() -> bool:
-    return shutil.which("playwright") is not None
+    # find_spec works when only the package (not the CLI shim) is installed.
+    return importlib.util.find_spec("playwright") is not None
 
 
 def cooldown(seconds: float, *, on_tick: Callable[[int], None] | None = None) -> bool:

@@ -13,6 +13,6 @@ Then explain:
 - Which `source.*` references will be pulled from `secret.*` (PII) vs `profile.*` (public).
 - Whether the adapter is `auto_eligible`.
 
-NEVER suggest filling in PII values via chat. If something is missing, tell the user to edit `~/.config/job-hunter/secrets/personal.env` (chmod 600) or `~/.config/job-hunter/profile.yaml` directly.
+NEVER suggest filling in PII values via chat. If something is missing, tell the user to edit `<config>/secrets/personal.env` or `<config>/profile.yaml` directly.
 
 If the user wants a live (non-dry-run) fill, point them at `job-hunter apply <id>` from a TTY shell; explain that the live Playwright path is a follow-up to the 0.7.x line (see CHANGELOG).

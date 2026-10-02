@@ -44,7 +44,7 @@ def test_sync_writes_tracking_md_on_empty_db(isolated_home: Path) -> None:
     assert result.exit_code == 0, result.stdout
     index = isolated_home / "data" / "job-hunter" / "tracking.md"
     assert index.exists()
-    assert "# Job tracking" in index.read_text()
+    assert "# Job tracking" in index.read_text(encoding="utf-8")
 
 
 def test_doctor_runs(isolated_home: Path) -> None:

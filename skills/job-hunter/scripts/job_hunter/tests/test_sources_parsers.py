@@ -20,7 +20,7 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 
 def test_remoteok_parser_filters_and_maps() -> None:
-    raw = json.loads((FIXTURES / "remoteok.json").read_text())
+    raw = json.loads((FIXTURES / "remoteok.json").read_text(encoding="utf-8"))
     # Skip metadata at index 0
     items = raw[1:]
     postings = [remoteok_item(item) for item in items]
@@ -35,7 +35,7 @@ def test_remoteok_parser_filters_and_maps() -> None:
 
 
 def test_job_na_gringa_parser_extracts_three_cards() -> None:
-    html = (FIXTURES / "job_na_gringa.html").read_text()
+    html = (FIXTURES / "job_na_gringa.html").read_text(encoding="utf-8")
     postings = parse_jng(html, "https://jobnagringa.com.br")
     assert len(postings) == 3
     titles = {p.title for p in postings}
@@ -49,7 +49,7 @@ def test_job_na_gringa_parser_extracts_three_cards() -> None:
 
 
 def test_gupy_parser_extracts_three_cards() -> None:
-    html = (FIXTURES / "gupy_nubank.html").read_text()
+    html = (FIXTURES / "gupy_nubank.html").read_text(encoding="utf-8")
     postings = parse_gupy(html, "nubank")
     assert len(postings) == 3
     titles = {p.title for p in postings}
@@ -63,7 +63,7 @@ def test_gupy_parser_extracts_three_cards() -> None:
 
 
 def test_linkedin_parser_anonymous_layout() -> None:
-    html = (FIXTURES / "linkedin_search.html").read_text()
+    html = (FIXTURES / "linkedin_search.html").read_text(encoding="utf-8")
     postings = parse_linkedin(html, "https://www.linkedin.com")
     assert len(postings) == 3
     senior = next(p for p in postings if p.title == "Senior Android Engineer")
@@ -76,7 +76,7 @@ def test_linkedin_parser_anonymous_layout() -> None:
 
 def test_linkedin_parser_authenticated_layout() -> None:
     """Logged-in SPA layout uses `[data-occludable-job-id]` + artdeco lockup."""
-    html = (FIXTURES / "linkedin_authenticated.html").read_text()
+    html = (FIXTURES / "linkedin_authenticated.html").read_text(encoding="utf-8")
     postings = parse_linkedin(html, "https://www.linkedin.com")
     assert len(postings) == 3
     senior = next(p for p in postings if p.title == "Senior Android Engineer")
@@ -110,7 +110,7 @@ def test_search_query_role_filter_excludes_junior() -> None:
 
 
 def test_remoteok_external_id_stable() -> None:
-    raw = json.loads((FIXTURES / "remoteok.json").read_text())
+    raw = json.loads((FIXTURES / "remoteok.json").read_text(encoding="utf-8"))
     p1 = remoteok_item(raw[1])
     p2 = remoteok_item(raw[1])
     assert p1.external_id == p2.external_id

@@ -21,10 +21,12 @@ def test_package_version_set() -> None:
 def test_versions_agree_across_files() -> None:
     pkg_v = job_hunter.__version__
 
-    marketplace = json.loads((REPO_ROOT / ".claude-plugin" / "marketplace.json").read_text())
+    marketplace = json.loads(
+        (REPO_ROOT / ".claude-plugin" / "marketplace.json").read_text(encoding="utf-8")
+    )
     assert marketplace["plugins"][0]["version"] == pkg_v
 
-    skill_md = (REPO_ROOT / "skills" / "job-hunter" / "SKILL.md").read_text()
+    skill_md = (REPO_ROOT / "skills" / "job-hunter" / "SKILL.md").read_text(encoding="utf-8")
     m = re.search(r"^version:\s*(\S+)\s*$", skill_md, re.MULTILINE)
     assert m, "SKILL.md frontmatter missing `version:`"
     assert m.group(1) == pkg_v

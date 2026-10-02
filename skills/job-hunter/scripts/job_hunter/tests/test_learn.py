@@ -124,4 +124,4 @@ def test_save_inbox_draft_writes_yaml(monkeypatch: pytest.MonkeyPatch, tmp_path:
     }
     out = save_inbox_draft(p, "test_signature_1", draft)
     assert out.exists()
-    assert "platform_signature: test_signature_1" in out.read_text()
+    assert "platform_signature: test_signature_1" in out.read_text(encoding="utf-8")
