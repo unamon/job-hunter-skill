@@ -1,24 +1,28 @@
 # Source: Gupy
 
-Brazilian ATS used by most mid-to-large BR tech companies. Hostname pattern: `<company>.gupy.io`. No central index — you discover by knowing the companies.
+Brazilian ATS used by most mid-to-large BR tech companies. Hostname pattern: `<company>.gupy.io`.
 
-## Target company list
+## Discovery: portal search (default)
 
-Stored at `$XDG_CONFIG_HOME/job-hunter/gupy_companies.yaml`:
+`portal.gupy.io` has a public JSON search across every company, the one its own UI calls:
+
+```
+GET https://portal.gupy.io/api/job-search/jobs?jobName=<term>&limit=100&offset=<n>
+-> {"data": [...], "pagination": {"total", "limit", "offset"}}
+```
+
+`discover` runs one search per `profile.yaml` role, pages up to `max_pages`, dedupes by job `id`, and keeps only titles that pass `matches_role` (the search is fuzzy). Each row's `careerPageUrl` is usually empty, so the host comes from `jobUrl`; postings are stored under the canonical `https://<host>/jobs/<id>` so the gupy apply adapter matches.
+
+## Optional company list
+
+`$XDG_CONFIG_HOME/job-hunter/gupy_companies.yaml` adds a direct HTML scrape of specific career pages (for companies that don't publish to the portal):
 
 ```yaml
 companies:
-  - nubank
-  - stark
-  - inter
-  - itau
-  - bradesco
-  - rappi
-  - ifood
-  # ... add as you find them
+  - somecompany   # subdomain of somecompany.gupy.io
 ```
 
-`job discover --source gupy` iterates these. To add: visit any Gupy form, grab the subdomain, append.
+The old built-in default list (nubank, itau, ifood, ...) was dropped: by Oct 2026 six of seven no longer had a Gupy page.
 
 ## Endpoints
 
