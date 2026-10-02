@@ -50,6 +50,9 @@ class FakeLocator:
         self.page.values[self.selector] = Path(path).name
 
     def click(self, timeout: float = 0) -> None:  # noqa: ARG002
+        if self.page.blocked_clicks:
+            self.page.blocked_clicks -= 1
+            raise TimeoutError("element is covered by another element")
         self.page.clicked.append(self.selector)
 
 
@@ -59,6 +62,7 @@ class FakePage:
         self.values: dict[str, str] = {}
         self.clicked: list[str] = []
         self.hidden: set[str] = set()
+        self.blocked_clicks = 0
         self.masked: dict[str, list[str]] = {}
 
     def locator(self, selector: str) -> FakeLocator:
@@ -112,7 +116,11 @@ def resolver(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> SecretResolver:
 
 
 def _run(
-    resolver: SecretResolver, page: FakePage, answers: list[str], run_dir: Path
+    resolver: SecretResolver,
+    page: FakePage,
+    answers: list[str],
+    run_dir: Path,
+    retries: list[str] | None = None,
 ) -> tuple[Any, list[str]]:
     asked: list[str] = []
 
@@ -132,6 +140,7 @@ def _run(
         label="001 Fake",
         log_paths=[],
         prompt=prompt,
+        retry_prompt=lambda: (retries or ["n"]).pop(0),
     )
     return report, asked
 
@@ -197,3 +206,25 @@ def test_shadow_eof_is_no_tty(resolver: SecretResolver, tmp_path: Path) -> None:
     report, _ = _run(resolver, FakePage(dict(ELEMENTS)), [""], tmp_path)
     assert report.outcome == FillOutcome.ABORTED_FOR_REVIEW.value
     assert report.reason == "no_tty"
+
+
+def test_covered_submit_retries_after_user_clears_it(
+    resolver: SecretResolver, tmp_path: Path
+) -> None:
+    page = FakePage(dict(ELEMENTS))
+    page.blocked_clicks = 1  # e.g. a cookie banner backdrop
+    report, _ = _run(resolver, page, ["y"], tmp_path, retries=[""])
+    assert report.outcome == FillOutcome.SUBMITTED.value
+    assert page.clicked == ["#submit"]
+
+
+def test_covered_submit_user_gives_up(resolver: SecretResolver, tmp_path: Path) -> None:
+    page = FakePage(dict(ELEMENTS))
+    page.blocked_clicks = 5
+    report, _ = _run(resolver, page, ["y"], tmp_path, retries=["n"])
+    assert report.outcome == FillOutcome.ABORTED_FOR_REVIEW.value
+    assert report.reason == "submit_not_clickable"
+    assert page.clicked == []
+    assert json.loads((tmp_path / "report.json").read_text(encoding="utf-8"))["outcome"] == (
+        "aborted_for_review"
+    )

@@ -171,6 +171,32 @@ def _print_results(results: list[FieldResult], checks: list[CheckResult]) -> Non
         console.print(f"  {mark} {c.name}{detail}")
 
 
+def _ask_retry() -> str:
+    try:
+        return input("Press Enter to retry Submit, or type n to stop: ").strip().lower()
+    except EOFError:
+        return "n"
+
+
+def click_submit(
+    page: Any, adapter: Adapter, *, retry_prompt: Callable[[], str] | None = None
+) -> bool:
+    """Click submit; if something covers it (cookie banner, modal), let the user
+    clear it and retry instead of crashing with the filled form lost."""
+    ask = retry_prompt or _ask_retry
+    while True:
+        try:
+            page.locator(adapter.submit.selector).first.click(timeout=FILL_TIMEOUT_MS)
+            return True
+        except Exception as e:  # noqa: BLE001 — Playwright raises TimeoutError here
+            console.print(
+                f"[yellow]Couldn't click Submit ({type(e).__name__})[/yellow] — something "
+                "is covering it, often a cookie banner. Clear it in the browser."
+            )
+            if ask() in {"n", "no"}:
+                return False
+
+
 def write_report(run_dir: Path, report: FillReport) -> Path:
     out = run_dir / "report.json"
     out.write_text(json.dumps(asdict(report), indent=2), encoding="utf-8")
@@ -189,6 +215,7 @@ def run_shadow(
     label: str,
     log_paths: list[Path],
     prompt: Callable[[str], str] = confirm_submit_blocking,
+    retry_prompt: Callable[[], str] | None = None,
 ) -> FillReport:
     """Fill, check, ask. Clicks submit only on an explicit `y`."""
     report = FillReport(
@@ -229,12 +256,15 @@ def run_shadow(
         break
 
     if answer in {"y", "yes"}:
-        page.locator(adapter.submit.selector).first.click(timeout=FILL_TIMEOUT_MS)
-        # SPAs may never go idle; screenshot whatever is there after the wait.
-        with contextlib.suppress(Exception):
-            page.wait_for_load_state("networkidle", timeout=SUBMIT_SETTLE_MS)
-        screenshot_masked(page, adapter, run_dir / "after_submit.png")
-        report.outcome = FillOutcome.SUBMITTED.value
+        if click_submit(page, adapter, retry_prompt=retry_prompt):
+            # SPAs may never go idle; screenshot whatever is there after the wait.
+            with contextlib.suppress(Exception):
+                page.wait_for_load_state("networkidle", timeout=SUBMIT_SETTLE_MS)
+            screenshot_masked(page, adapter, run_dir / "after_submit.png")
+            report.outcome = FillOutcome.SUBMITTED.value
+        else:
+            report.outcome = FillOutcome.ABORTED_FOR_REVIEW.value
+            report.reason = "submit_not_clickable"
     else:
         report.outcome = FillOutcome.ABORTED_FOR_REVIEW.value
         report.reason = "no_tty" if answer == "" else "user_declined"
@@ -270,17 +300,27 @@ def launch_and_run(
             wall = detect_auth_wall(url=page.url, body_text=page.inner_text("body"))
             if wall:
                 console.print(f"[yellow]heads-up[/yellow]: {escape(wall)}")
-            report = run_shadow(
-                page,
-                adapter,
-                plan,
-                resolver,
-                generate_inputs=generate_inputs,
-                run_dir=run_dir,
-                locale_hint=locale_hint,
-                label=label,
-                log_paths=log_paths,
-            )
+            try:
+                report = run_shadow(
+                    page,
+                    adapter,
+                    plan,
+                    resolver,
+                    generate_inputs=generate_inputs,
+                    run_dir=run_dir,
+                    locale_hint=locale_hint,
+                    label=label,
+                    log_paths=log_paths,
+                )
+            except Exception as e:
+                # Don't throw away a filled form: keep the window until the user is done.
+                console.print(
+                    f"[red]fill failed[/red]: {type(e).__name__}. Browser left open — "
+                    "you can finish by hand, then run `job stage <id> --to applied`."
+                )
+                with contextlib.suppress(EOFError):
+                    input("Press Enter to close the browser... ")
+                raise
             if report.outcome != FillOutcome.SUBMITTED.value and report.reason != "no_tty":
                 console.print(
                     "Browser left open — you can finish by hand, then run "
